@@ -267,7 +267,7 @@ class AutoTaskPlugin(BasePlugin):
             "target": group_id,
             "type": target_type,
             "name": task_name,
-            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at": datetime.now(china_tz).strftime("%Y-%m-%d %H:%M:%S"),
             "last_triggered_at": None  # 添加一个新字段，用于记录任务的最后触发时间
         }
 
