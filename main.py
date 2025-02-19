@@ -251,7 +251,7 @@ class AutoTaskPlugin(BasePlugin):
     async def add_task(self, ctx: EventContext, target_type, group_id, task_name, task_time):
         # 检查任务名称是否已存在
         for task in self.tasks:
-            if task["name"] == task_name:
+            if task["name"] == task_name and task["time"] == task_time:
                 await ctx.reply(MessageChain([Plain(f"定时任务 {task_name} 已存在，请使用其他名称!")]))
                 return
 
