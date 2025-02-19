@@ -249,7 +249,7 @@ class AutoTaskPlugin(BasePlugin):
                 await ctx.reply(MessageChain([Plain("请使用以下格式：\n/定时 添加 <任务名> <时间>\n/定时 删除 <任务名>\n/定时 列出\n\
                                                     例如：定时 添加 早报 8:10\n\
                                                     任务名仅能触发/data目录下脚本\n\
-                                                    目前有任务：\n\
+                                                    目前可用任务名：\n\
                                                     早报")]))
 
     async def add_task(self, ctx: EventContext, target_type, group_id, task_name, task_time):
