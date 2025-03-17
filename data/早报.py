@@ -30,7 +30,7 @@ def get_zaobao_image_url(token):
         return None
 
 def main():
-    token = "u0sxbhimlzlegxph3zuzr7jwwgapv2"  # 替换为你的Token
+    token = ""  # 替换为你的Token
     image_url = get_zaobao_image_url(token)  # 获取图片 URL
     if image_url and image_url.startswith("http"):
         markdown_image_link = f"![早报图片]({image_url})"  # 转换为 Markdown 格式
