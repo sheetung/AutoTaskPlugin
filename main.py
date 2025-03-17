@@ -85,12 +85,10 @@ class AutoTaskPlugin(BasePlugin):
         task_name = task["name"]
 
         script_path = os.path.join(os.path.dirname(__file__), 'data', f"{script_name}.py")
-        # print(f"脚本路径: {script_path}")  # 调试输出
         if os.path.exists(script_path):
             try:
                 result = subprocess.check_output(['python', script_path], text=True, timeout=60)  # 设置超时为60秒
                 messages = self.convert_message(result, target_id)
-                # print(f'messages1={messages}')
                 await self.send_reply(target_id, target_type, messages)
             except subprocess.CalledProcessError as e:
                 error_msg = f"定时任务 {task_name} 执行失败: {e.output}"
@@ -124,7 +122,6 @@ class AutoTaskPlugin(BasePlugin):
         return parts if parts else [Plain(message)]  # 返回构建好的消息列表，如果没有部分则返回纯文本消息
 
     async def send_reply(self, target_id, target_type, messages):
-        # print("1111111111111111")
         adapters = self.host.get_platform_adapters()  # 获取所有适配器对象
         aiocqhttp_adapter = None
         # 查找名为 'aiocqhttp' 的适配器对象
@@ -137,22 +134,11 @@ class AutoTaskPlugin(BasePlugin):
             print("Error: aiocqhttp adapter not found.")
             return
         # print(f'aiocqhttp_adapter={aiocqhttp_adapter}')
-        if target_type == 'person':
-            print(f'per={messages}')
             
-            await self.host.send_active_message(adapter=aiocqhttp_adapter,
-                                                target_type=target_type,
-                                                target_id=str(target_id),
-                                                message=MessageChain(messages))
-        elif target_type == 'group':
-            # print(f'gro={messages}')
-            # print(f"self.host 的类型: {type(self.host)}")
-            # print(f"self.host 的值: {self.host}")
-            await self.host.send_active_message(adapter=aiocqhttp_adapter,
-                                                target_type=target_type,
-                                                target_id=str(target_id),
-                                                message=MessageChain(messages),
-                                            )
+        await self.host.send_active_message(adapter=self.host.get_platform_adapters()[0],
+                                            target_type=target_type,
+                                            target_id=str(target_id),
+                                            message=MessageChain(messages))
 
     def load_tasks(self):
         """
