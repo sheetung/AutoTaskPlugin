@@ -47,7 +47,6 @@ class AutoTaskPlugin(BasePlugin):
         while True:
             try:
                 await asyncio.sleep(60)
-                # print('60秒检查')
                 await self.check_timer_handler()
             except Exception as e:
                 print(f"定时检查出错: {e}")
@@ -55,7 +54,6 @@ class AutoTaskPlugin(BasePlugin):
     async def check_timer_handler(self):
         # current_time_str = datetime.now().strftime("%H:%M")  # 修正 datetime 使用
         current_time_str = datetime.now(china_tz).strftime('%H:%M') 
-        # print(f'当前时间: {current_time_str}')
         hours_current, minutes_current = current_time_str.split(":")
         current_minutes = int(hours_current) * 60 + int(minutes_current)
 
@@ -73,7 +71,6 @@ class AutoTaskPlugin(BasePlugin):
             if time_diff == 0:  # 移除 or True
                 last_triggered = task.get("last_triggered_at")
                 if last_triggered is None or (now - last_triggered).total_seconds() >= 60:
-                    # print(f'触发任务: {task["name"]}')
                     task["last_triggered_at"] = now
                     self.save_tasks()  # 保存任务列表到文件
                     await self.execute_task(task)
@@ -85,12 +82,10 @@ class AutoTaskPlugin(BasePlugin):
         task_name = task["name"]
 
         script_path = os.path.join(os.path.dirname(__file__), 'data', f"{script_name}.py")
-        # print(f"脚本路径: {script_path}")  # 调试输出
         if os.path.exists(script_path):
             try:
                 result = subprocess.check_output(['python', script_path], text=True, timeout=60)  # 设置超时为60秒
                 messages = self.convert_message(result, target_id)
-                # print(f'messages1={messages}')
                 await self.send_reply(target_id, target_type, messages)
             except subprocess.CalledProcessError as e:
                 error_msg = f"定时任务 {task_name} 执行失败: {e.output}"
@@ -124,19 +119,7 @@ class AutoTaskPlugin(BasePlugin):
         return parts if parts else [Plain(message)]  # 返回构建好的消息列表，如果没有部分则返回纯文本消息
 
     async def send_reply(self, target_id, target_type, messages):
-        # print("1111111111111111")
-        adapters = self.host.get_platform_adapters()  # 获取所有适配器对象
-        aiocqhttp_adapter = None
-        # 查找类型为 AiocqhttpAdapter 的适配器
-        for adapter in adapters:
-            if type(adapter).__name__ == 'AiocqhttpAdapter':
-                aiocqhttp_adapter = adapter
-                break
-        if aiocqhttp_adapter is None:
-            print("Error: aiocqhttp adapter not found.")
-            return
-        
-        await self.host.send_active_message(adapter=aiocqhttp_adapter,
+        await self.host.send_active_message(adapter=self.host.get_platform_adapters()[0],
                                             target_type=target_type,
                                             target_id=str(target_id),
                                             message=MessageChain(messages),
