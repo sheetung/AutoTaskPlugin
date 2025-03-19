@@ -16,7 +16,7 @@ china_tz = timezone(timedelta(hours=8))
 
 @register(name="AutoTaskPlugin", 
           description="增加定时功能的小插件（支持±1分钟触发范围）", 
-          version="0.2", 
+          version="0.3", 
           author="sheetung")
 class AutoTaskPlugin(BasePlugin):
 
@@ -85,10 +85,12 @@ class AutoTaskPlugin(BasePlugin):
         task_name = task["name"]
 
         script_path = os.path.join(os.path.dirname(__file__), 'data', f"{script_name}.py")
+        # print(f"脚本路径: {script_path}")  # 调试输出
         if os.path.exists(script_path):
             try:
                 result = subprocess.check_output(['python', script_path], text=True, timeout=60)  # 设置超时为60秒
                 messages = self.convert_message(result, target_id)
+                # print(f'messages1={messages}')
                 await self.send_reply(target_id, target_type, messages)
             except subprocess.CalledProcessError as e:
                 error_msg = f"定时任务 {task_name} 执行失败: {e.output}"
@@ -122,23 +124,23 @@ class AutoTaskPlugin(BasePlugin):
         return parts if parts else [Plain(message)]  # 返回构建好的消息列表，如果没有部分则返回纯文本消息
 
     async def send_reply(self, target_id, target_type, messages):
+        # print("1111111111111111")
         adapters = self.host.get_platform_adapters()  # 获取所有适配器对象
         aiocqhttp_adapter = None
-        # 查找名为 'aiocqhttp' 的适配器对象
+        # 查找类型为 AiocqhttpAdapter 的适配器
         for adapter in adapters:
-            if adapter.name == "aiocqhttp":  # 假设适配器有一个 name 属性
+            if type(adapter).__name__ == 'AiocqhttpAdapter':
                 aiocqhttp_adapter = adapter
                 break
         if aiocqhttp_adapter is None:
-            # 如果找不到适配器，抛出异常或记录错误
             print("Error: aiocqhttp adapter not found.")
             return
-        # print(f'aiocqhttp_adapter={aiocqhttp_adapter}')
-            
-        await self.host.send_active_message(adapter=self.host.get_platform_adapters()[0],
+        
+        await self.host.send_active_message(adapter=aiocqhttp_adapter,
                                             target_type=target_type,
                                             target_id=str(target_id),
-                                            message=MessageChain(messages))
+                                            message=MessageChain(messages),
+                                        )
 
     def load_tasks(self):
         """
@@ -232,11 +234,7 @@ class AutoTaskPlugin(BasePlugin):
             elif subcmd == "列出":
                 await self.list_tasks(ctx, target_type, group_id)
             else:
-                await ctx.reply(MessageChain([Plain("请使用以下格式：\n/定时 添加 <任务名> <时间>\n/定时 删除 <任务名>\n/定时 列出\n\
-                                                    例如：定时 添加 早报 8:10\n\
-                                                    任务名仅能触发/data目录下脚本\n\
-                                                    目前可用任务名：\n\
-                                                    早报")]))
+                await ctx.reply(MessageChain([Plain("请使用以下格式：\n/定时 添加 <任务名> <时间>\n/定时 删除 <任务名>\n/定时 列出\n例如：定时 添加 早报 8:10\n任务名仅能触发/data目录下脚本\n目前有任务：\n早报")]))
 
     async def add_task(self, ctx: EventContext, target_type, group_id, task_name, task_time):
         # 检查任务名称是否已存在
