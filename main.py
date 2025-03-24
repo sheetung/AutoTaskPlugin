@@ -16,9 +16,9 @@ china_tz = timezone(timedelta(hours=8))
 
 @register(name="AutoTaskPlugin", 
           description="增加定时功能的小插件（支持±1分钟触发范围）", 
-          version="0.3", 
+          version="0.5", 
           author="sheetung")
-class AutoTaskPlugin(BasePlugin):
+class MyPlugin(BasePlugin):
 
     def __init__(self, host: APIHost):
         self.host = host
@@ -190,6 +190,31 @@ class AutoTaskPlugin(BasePlugin):
 
     async def handle_command(self, ctx: EventContext, target_type):
         msg = str(ctx.event.message_chain).strip()
+
+        launcher_id = str(ctx.event.launcher_id)
+        launcher_type = str(ctx.event.launcher_type)
+        
+        # 获取黑/白名单
+        mode = self.ap.pipeline_cfg.data['access-control']['mode']
+        sess_list = self.ap.pipeline_cfg.data['access-control'][mode]
+
+        found = False
+        if (launcher_type== 'group' and 'group_*' in sess_list) \
+            or (launcher_type == 'person' and 'person_*' in sess_list):
+            found = True
+        else:
+            for sess in sess_list:
+                if sess == f"{launcher_type}_{launcher_id}":
+                    found = True
+                    break 
+        ctn = False
+        if mode == 'whitelist':
+            ctn = found
+        else:
+            ctn = not found
+        if not ctn:
+            # print(f'您被杀了哦')
+            return
 
         # 处理 cmd，如果包含 / 则删除 /
         if '/' in msg:
