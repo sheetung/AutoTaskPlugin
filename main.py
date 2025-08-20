@@ -8,6 +8,7 @@ import time
 import json
 from datetime import datetime, timedelta, timezone
 from pkg.platform.types import *
+import yaml
 
 APPLIANCE_ID = "VERSA"
 
@@ -27,6 +28,20 @@ class MyPlugin(BasePlugin):
         self.load_tasks()
         self.lock = asyncio.Lock()
         self.last_check_time = -1.0
+
+        # 配置文件路径
+        config_path = os.path.join(os.path.dirname(__file__), 'admin.yaml')
+        # 从YAML文件读取配置
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                cfg = yaml.safe_load(f)
+        except Exception as e:
+            print(f"读取配置文件失败: {e}")
+            cfg = {}  # 设置空配置，避免后续代码出错
+        # print(f'cfg={cfg}')
+
+         # 获取Dify配置
+        self.adminCfg = cfg.get('qq',"")
 
 
         # 启动定时检查器
@@ -232,7 +247,11 @@ class MyPlugin(BasePlugin):
 
         # 检查消息是否以“定时”开头
         if msg.startswith("定时"):
-            self.ap.logger.info(f'[AutoTaskPlugin]msg22={msg}')
+            # 匹配管理员id
+            if self.adminCfg != str(ctx.event.sender_id) :
+                await ctx.reply(MessageChain([Plain(f"插件[AutoTaskPlugin]仅允许管理员操作,请联系管理员")]))
+                return
+            # self.ap.logger.info(f'[AutoTaskPlugin]msg22={msg}')
             command = msg.split(' ', 3)  # 拆分命令为最多四个部分
 
             # 命令结构：定时 [子命令] [任务名] [时间]
